@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spiegel AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 400px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 10px;
+            position: relative;
+        }
+
+        .logo svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: #f1f3f4;
+            color: #333;
+            align-self: flex-start;
+            border: 1px solid #e0e0e0;
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .message-input:focus {
+            border-color: #4facfe;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: #f1f3f4;
+            border-radius: 18px;
+            align-self: flex-start;
+            max-width: 80px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="logo">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#f0f8ff;stop-opacity:0.9" />
+                            <stop offset="100%" style="stop-color:#e1f5fe;stop-opacity:0.8" />
+                        </linearGradient>
+                        <linearGradient id="brainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#4fc3f7;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#29b6f6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Outer ring representing "Spiegel" (mirror) -->
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="4" opacity="0.9"/>
+                    <circle cx="50" cy="50" r="35" fill="url(#logoGradient)" stroke="white" stroke-width="2"/>
+                    
+                    <!-- Brain/AI representation -->
+                    <path d="M30 45 Q35 35, 45 40 Q50 35, 55 40 Q65 35, 70 45 Q65 55, 55 50 Q50 55, 45 50 Q35 55, 30 45Z" 
+                          fill="url(#brainGradient)" opacity="0.8"/>
+                    
+                    <!-- Neural network nodes -->
+                    <circle cx="40" cy="42" r="2.5" fill="white"/>
+                    <circle cx="50" cy="38" r="2.5" fill="white"/>
+                    <circle cx="60" cy="42" r="2.5" fill="white"/>
+                    <circle cx="45" cy="48" r="2.5" fill="white"/>
+                    <circle cx="55" cy="48" r="2.5" fill="white"/>
+                    
+                    <!-- Neural connections -->
+                    <path d="M40 42 L50 38 M50 38 L60 42 M40 42 L45 48 M60 42 L55 48 M45 48 L55 48" 
+                          stroke="white" stroke-width="1.5" opacity="0.7"/>
+                    
+                    <!-- "S" for Spiegel -->
+                    <path d="M25 60 Q30 55, 35 60 Q40 65, 35 70 Q30 75, 25 70" 
+                          fill="white" opacity="0.9" stroke="white" stroke-width="1"/>
+                    
+                    <!-- Digital elements -->
+                    <rect x="65" y="58" width="3" height="3" fill="white" opacity="0.8"/>
+                    <rect x="70" y="61" width="3" height="3" fill="white" opacity="0.8"/>
+                    <rect x="67" y="65" width="3" height="3" fill="white" opacity="0.8"/>
+                </svg>
+            </div>
+            <h1>Spiegel AI</h1>
+            <p>Your intelligent assistant</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                Hello! I'm Spiegel AI, your intelligent assistant. I can help you with calculations, answer questions, and have conversations. Try asking me to solve a math problem or just say hello! 🤖
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <div class="input-group">
+                <input type="text" class="message-input" id="messageInput" placeholder="Type your message..." maxlength="500">
+                <button class="send-button" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SpiegelAI {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                
+                this.responses = {
+                    greetings: [
+                        "Hello there! How can I assist you today?",
+                        "Hi! I'm Spiegel AI, ready to help!",
+                        "Greetings! What would you like to know?",
+                        "Hey! How can I make your day better?"
+                    ],
+                    calculations: [
+                        "Let me calculate that for you!",
+                        "Here's your answer:",
+                        "I've solved it:",
+                        "The result is:"
+                    ],
+                    unknown: [
+                        "I'm not sure about that, but I'm learning! Try asking me to calculate something or say hello!",
+                        "That's interesting! I specialize in calculations and simple conversations. What math can I help with?",
+                        "I don't have that information, but I'm great with numbers! Give me a calculation to solve!",
+                        "I'm still learning about that topic. How about we try some math together?"
+                    ]
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+            }
+            
+            sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+                
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                
+                this.showTyping();
+                setTimeout(() => {
+                    this.hideTyping();
+                    this.processMessage(message);
+                }, 1000 + Math.random() * 1000);
+            }
+            
+            addMessage(message, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+                messageDiv.textContent = message;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            showTyping() {
+                this.typingIndicator.style.display = 'block';
+                this.chatMessages.appendChild(this.typingIndicator);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            hideTyping() {
+                this.typingIndicator.style.display = 'none';
+            }
+            
+            processMessage(message) {
+                const lowerMessage = message.toLowerCase();
+                
+                // Check for greetings
+                if (this.isGreeting(lowerMessage)) {
+                    const response = this.getRandomResponse(this.responses.greetings);
+                    this.addMessage(response, 'bot');
+                    return;
+                }
+                
+                // Check for calculations
+                if (this.isCalculation(message)) {
+                    const result = this.performCalculation(message);
+                    const prefix = this.getRandomResponse(this.responses.calculations);
+                    this.addMessage(`${prefix} ${result}`, 'bot');
+                    return;
+                }
+                
+                // Check for simple questions
+                if (this.isQuestion(lowerMessage)) {
+                    const response = this.answerQuestion(lowerMessage);
+                    this.addMessage(response, 'bot');
+                    return;
+                }
+                
+                // Default response
+                const response = this.getRandomResponse(this.responses.unknown);
+                this.addMessage(response, 'bot');
+            }
+            
+            isGreeting(message) {
+                const greetingWords = ['hello', 'hi', 'hey', 'howdy', 'greetings', 'good morning', 'good afternoon', 'good evening'];
+                return greetingWords.some(word => message.includes(word));
+            }
+            
+            isCalculation(message) {
+                return /[\d\+\-\*\/\(\)\.\^]/.test(message) || 
+                       /calculate|compute|solve|math|plus|minus|times|divided|square|root/.test(message.toLowerCase());
+            }
+            
+            isQuestion(message) {
+                return message.includes('?') || 
+                       message.startsWith('what') || 
+                       message.startsWith('how') || 
+                       message.startsWith('why') ||
+                       message.startsWith('when') ||
+                       message.startsWith('where');
+            }
+            
+            performCalculation(message) {
+                try {
+                    // Extract numbers and operators
+                    let expression = message.match(/[\d\+\-\*\/\(\)\.\^]+/g);
+                    if (expression) {
+                        expression = expression.join('');
+                        // Replace ^ with ** for JavaScript power operator
+                        expression = expression.replace(/\^/g, '**');
+                        
+                        // Safe evaluation (basic calculator)
+                        if (/^[\d\+\-\*\/\(\)\.\s]+$/.test(expression)) {
+                            const result = Function('"use strict"; return (' + expression + ')')();
+                            return Number.isInteger(result) ? result.toString() : result.toFixed(4);
+                        }
+                    }
+                    
+                    // Handle word problems
+                    if (message.toLowerCase().includes('square root')) {
+                        const num = message.match(/\d+/);
+                        if (num) {
+                            return Math.sqrt(parseInt(num[0])).toFixed(4);
+                        }
+                    }
+                    
+                    return "I couldn't parse that calculation. Try something like '5 + 3' or '10 * 2'";
+                } catch (error) {
+                    return "Sorry, I couldn't solve that calculation. Please check your input!";
+                }
+            }
+            
+            answerQuestion(message) {
+                if (message.includes('your name') || message.includes('who are you')) {
+                    return "I'm Spiegel AI, your intelligent assistant! I specialize in calculations and conversations.";
+                }
+                if (message.includes('what can you do')) {
+                    return "I can help with calculations, solve math problems, and have simple conversations! Try asking me to calculate something!";
+                }
+                if (message.includes('time')) {
+                    return `The current time is ${new Date().toLocaleTimeString()}`;
+                }
+                if (message.includes('date')) {
+                    return `Today's date is ${new Date().toLocaleDateString()}`;
+                }
+                
+                return this.getRandomResponse(this.responses.unknown);
+            }
+            
+            getRandomResponse(responses) {
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+        }
+        
+        // Initialize the chatbot when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SpiegelAI();
+        });
+    </script>
+</body>
+</html>
